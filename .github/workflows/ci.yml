@@ -2,16 +2,37 @@ name: Application Pipeline
 
 on:
   push:
+  workflow_dispatch:
+    inputs:
+      target_sub_env:
+        description: 'Environnement cible (ex: sandbox)'
+        required: false
+        type: string
+  schedule:
+    - cron: '0 0 * * *'
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write
+  security-events: write
+  actions: read
 
 jobs:
-  validate-code:
+  build-and-test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      checks: write
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -43,6 +64,14 @@ jobs:
           detailed_summary: true
           include_passed: true
 
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+  deploy-staging-prod:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    environment: production
+    steps:
       - name: Test Secrets and Variables
         env:
           APP_ENV: ${{ vars.APP_ENVIRONMENT }}
