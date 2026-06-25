@@ -20,6 +20,7 @@ permissions:
   checks: write
   security-events: write
   actions: read
+  issues: write
 
 jobs:
   build-and-test:
