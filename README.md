@@ -68,22 +68,47 @@ Ce mécanisme de garde-fou bloque localement le commit et empêche l'envoi de co
 
 Le projet intègre une usine logicielle complète et hautement sécurisée, automatisant l'intégralité du cycle de vie du code jusqu'au déploiement. Le pipeline s'exécute à chaque `push`, de manière planifiée (`cron`), ou manuellement (`workflow_dispatch`).
 
-### 1. Build & Test (`build-and-test`)
-- **Mise en cache** : Les dépendances Node.js (`~/.npm`) sont mises en cache pour accélérer drastiquement les futures exécutions.
-- **Tests Automatisés** : Exécution de la suite complète de tests Jest.
-- **Rapports Graphiques** : Génération et publication d'un rapport visuel JUnit détaillé directement dans l'interface GitHub Actions (`mikepenz/action-junit-report`).
-- **Analyse SAST (CodeQL)** : Le code source est scanné statiquement à la recherche de failles de logique métier et d'injections (SQL, XSS, etc.).
-- **Analyse DAST (OWASP ZAP)** : L'application est démarrée en arrière-plan et bombardée par un robot attaquant (ZAP Baseline Scan) pour détecter les défauts de configuration HTTP et les vulnérabilités de surface. ZAP crée automatiquement des "Issues" sur le dépôt si des failles majeures sont trouvées.
+### Workflow Visuel du Pipeline
 
-### 2. Conteneurisation & Audit OS (`docker-build-and-scan`)
-- **Dockerisation Sécurisée** : Construction d'une image Docker basée sur `node:22-alpine`, allégée (uniquement dépendances de production) et s'exécutant avec l'utilisateur non privilégié `node` (au lieu de `root`).
-- **Container Security (Trivy)** : Le système de fichiers du conteneur et ses dépendances systèmes sont passés au crible par Trivy (`aquasecurity/trivy-action`). 
+```mermaid
+graph TD
+    A([Développeur]) -->|Git Commit| B(Garde-fou Local: actionlint)
+    B -->|Git Push| C{GitHub Actions}
+    
+    C -->|Déclencheur| D[Job 1: build-and-test]
+    
+    subgraph Job 1 [Validation Technique & Sécurité Code]
+        D1[Checkout & Setup Node] --> D2[Installation avec Cache ~/.npm]
+        D2 --> D3[Tests Unitaires & E2E avec rapports JUnit]
+        D3 --> D4[DAST: Attaque OWASP ZAP en arrière-plan]
+        D4 --> D5[SAST: Analyse de vulnérabilités CodeQL]
+    end
+    
+    D5 -->|Si Succès| E[Job 2: docker-build-and-scan]
+    
+    subgraph Job 2 [Conteneurisation & Sécurité OS]
+        E1[Build Image Docker non-root] --> E2[Audit OS & Librairies via Trivy]
+    end
+    
+    E2 -->|Si Succès| F{Approbation Manuelle}
+    
+    F -->|Review Deployment| G[Job 3: deploy-staging-prod]
+    
+    subgraph Job 3 [Déploiement]
+        G1[Injection & Masquage des Secrets GitHub] --> G2([Mise en Production])
+    end
+    
+    H([Dependabot]) -.->|Audit Hebdomadaire SCA| C
+```
 
-### 3. Déploiement Protégé (`deploy-staging-prod`)
-- **Environnement GitHub** : Ce job est formellement lié à l'environnement `production`. Il nécessite une **approbation humaine manuelle** sur l'interface GitHub (Review Deployments) avant de s'exécuter.
-- **Sécurisation des Secrets** : Le pipeline récupère des valeurs issues des *Variables* et *Secrets* du dépôt. GitHub masque automatiquement toute donnée sensible (comme une clé AWS) dans les logs de la console pour empêcher toute fuite d'informations publiques.
+### Couverture Complète du TP
 
-### 4. Software Composition Analysis (Dependabot)
-En complément du pipeline, un outil d'analyse des composants tiers (SCA) est activé via `.github/dependabot.yml` :
-- Il vérifie de manière hebdomadaire les dépendances dans `package.json` et les actions utilisées dans `ci.yml`.
-- Il génère automatiquement des *Pull Requests* pour appliquer les mises à jour de sécurité, qui sont elles-mêmes validées par le pipeline CI/CD avant toute fusion.
+Cette infrastructure couvre tous les piliers d'une chaîne DevSecOps moderne :
+
+1. **Shift Left (Pre-commit)** : L'utilisation de `actionlint` empêche l'envoi de configurations de pipeline syntaxiquement incorrectes dès le poste du développeur.
+2. **Intégration Continue (CI)** : Optimisation via le cache des dépendances Node.js et publication de tableaux de bords graphiques interactifs pour les résultats des tests Jest (JUnit).
+3. **Software Composition Analysis (SCA)** : Veille automatisée via `dependabot.yml` pour mettre à jour les paquets vulnérables et auditer les actions GitHub tierces.
+4. **Static Application Security Testing (SAST)** : Déploiement de GitHub CodeQL pour analyser de manière asynchrone le code source (détection des failles d'injection, XSS, fuites logiques).
+5. **Dynamic Application Security Testing (DAST)** : Hacking en direct de l'API via le robot attaquant OWASP ZAP Baseline Scanner pendant le build.
+6. **Container Security** : Création d'un conteneur optimisé sous Alpine, s'exécutant sans les droits `root`, et scanné de force par Trivy pour bloquer le déploiement en cas de failles OS critiques.
+7. **Gouvernance et Secret Management** : Masquage total des variables sensibles dans la console, annulation intelligente des workflows obsolètes (Concurrency), limitation des temps d'exécution (Timeout), réduction des privilèges du GITHUB_TOKEN (Hardening) et déploiement bloqué par une validation humaine stricte (`Environment: production`).
