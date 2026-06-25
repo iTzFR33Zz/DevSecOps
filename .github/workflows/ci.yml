@@ -15,8 +15,33 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
-        run: npm ci
+        run: |
+          echo "::group::Installation des modules Node.js"
+          npm ci
+          echo "::endgroup::"
 
       - name: Run tests
         run: npm test
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: 'reports/junit.xml'
+
+      - name: Test Secrets and Variables
+        env:
+          APP_ENV: ${{ vars.APP_ENVIRONMENT }}
+          AWS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+        run: |
+          echo "Environment: $APP_ENV"
+          echo "AWS Key: $AWS_KEY"
