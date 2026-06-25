@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>DevSecOps Lab - Mastère 1</title>
+    <style>
+        body { font-family: sans-serif; margin: 40px; background: #f4f6f9; color: #333; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h1 { color: #24292e; }
+        input, button { padding: 10px; margin-top: 5px; border-radius: 4px; border: 1px solid #ccc; }
+        button { background: #2cf; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #25a; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Plateforme d'Entraînement DevSecOps 🚀</h1>
+        <p>Ce squelette applicatif sert de support pour valider vos pipelines CI/CD.</p>
+    </div>
+
+    <div class="card">
+        <h3>Vérification du Système</h3>
+        <button onclick="fetch('/api/health').then(r=>r.json()).then(d=>alert(JSON.stringify(d)))">Tester la route Health</button>
+    </div>
+</body>
+</html>
