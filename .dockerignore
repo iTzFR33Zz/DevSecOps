@@ -1,0 +1,16 @@
+# Ignorer les dépendances locales (elles seront réinstallées dans le conteneur)
+node_modules/
+npm-debug.log
+
+# Ignorer les répertoires liés à Git et GitHub
+.git/
+.github/
+
+# Ignorer les configurations de l'IDE
+.vscode/
+
+# Ignorer les variables d'environnement locales
+.env
+
+# Ignorer les rapports de tests générés localement
+reports/
