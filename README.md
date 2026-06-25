@@ -63,3 +63,27 @@ Commit rejected. Please fix the errors and try again.
 ```
 
 Ce mécanisme de garde-fou bloque localement le commit et empêche l'envoi de configurations erronées sur le dépôt.
+
+## Architecture DevSecOps (Pipeline GitHub Actions)
+
+Le projet intègre une usine logicielle complète et hautement sécurisée, automatisant l'intégralité du cycle de vie du code jusqu'au déploiement. Le pipeline s'exécute à chaque `push`, de manière planifiée (`cron`), ou manuellement (`workflow_dispatch`).
+
+### 1. Build & Test (`build-and-test`)
+- **Mise en cache** : Les dépendances Node.js (`~/.npm`) sont mises en cache pour accélérer drastiquement les futures exécutions.
+- **Tests Automatisés** : Exécution de la suite complète de tests Jest.
+- **Rapports Graphiques** : Génération et publication d'un rapport visuel JUnit détaillé directement dans l'interface GitHub Actions (`mikepenz/action-junit-report`).
+- **Analyse SAST (CodeQL)** : Le code source est scanné statiquement à la recherche de failles de logique métier et d'injections (SQL, XSS, etc.).
+- **Analyse DAST (OWASP ZAP)** : L'application est démarrée en arrière-plan et bombardée par un robot attaquant (ZAP Baseline Scan) pour détecter les défauts de configuration HTTP et les vulnérabilités de surface. ZAP crée automatiquement des "Issues" sur le dépôt si des failles majeures sont trouvées.
+
+### 2. Conteneurisation & Audit OS (`docker-build-and-scan`)
+- **Dockerisation Sécurisée** : Construction d'une image Docker basée sur `node:22-alpine`, allégée (uniquement dépendances de production) et s'exécutant avec l'utilisateur non privilégié `node` (au lieu de `root`).
+- **Container Security (Trivy)** : Le système de fichiers du conteneur et ses dépendances systèmes sont passés au crible par Trivy (`aquasecurity/trivy-action`). 
+
+### 3. Déploiement Protégé (`deploy-staging-prod`)
+- **Environnement GitHub** : Ce job est formellement lié à l'environnement `production`. Il nécessite une **approbation humaine manuelle** sur l'interface GitHub (Review Deployments) avant de s'exécuter.
+- **Sécurisation des Secrets** : Le pipeline récupère des valeurs issues des *Variables* et *Secrets* du dépôt. GitHub masque automatiquement toute donnée sensible (comme une clé AWS) dans les logs de la console pour empêcher toute fuite d'informations publiques.
+
+### 4. Software Composition Analysis (Dependabot)
+En complément du pipeline, un outil d'analyse des composants tiers (SCA) est activé via `.github/dependabot.yml` :
+- Il vérifie de manière hebdomadaire les dépendances dans `package.json` et les actions utilisées dans `ci.yml`.
+- Il génère automatiquement des *Pull Requests* pour appliquer les mises à jour de sécurité, qui sont elles-mêmes validées par le pipeline CI/CD avant toute fusion.
