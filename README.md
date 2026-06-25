@@ -41,3 +41,25 @@ npm start
 ```
 
 L'application sera accessible depuis votre navigateur à l'adresse suivante : `http://localhost:3000`.
+
+## Validation continue (CI/CD)
+
+Afin de garantir la validité de nos workflows GitHub Actions, un *pre-commit hook* exécute automatiquement l'outil `actionlint` avant chaque commit. 
+
+**Exemple d'interception d'une erreur (ex: faute de frappe `run-on` au lieu de `runs-on`) :**
+
+```text
+Running actionlint to validate GitHub Actions workflows...
+.github/workflows/ci.yml:7:3: "runs-on" section is missing in job "validate-code" [syntax-check]
+  |
+7 |   validate-code:
+  |   ^~~~~~~~~~~~~~
+.github/workflows/ci.yml:8:5: unexpected key "run-on" for "job" section. expected one of "concurrency", "container", "continue-on-error", "defaults", "env", "environment", "if", "name", "needs", "outputs", "permissions", "runs-on", "secrets", "services", "snapshot", "steps", "strategy", "timeout-minutes", "uses", "with" [syntax-check]
+  |
+8 |     run-on: ubuntu-latest
+  |     ^~~~~~~
+Error: actionlint found issues in your GitHub Actions workflows.
+Commit rejected. Please fix the errors and try again.
+```
+
+Ce mécanisme de garde-fou bloque localement le commit et empêche l'envoi de configurations erronées sur le dépôt.
