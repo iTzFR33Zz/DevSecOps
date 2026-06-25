@@ -6,6 +6,9 @@ on:
 jobs:
   validate-code:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -16,7 +19,7 @@ jobs:
           node-version: '22'
 
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -33,7 +36,7 @@ jobs:
         run: npm test
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@v4
+        uses: mikepenz/action-junit-report@v5
         if: always()
         with:
           report_paths: 'reports/junit.xml'
