@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="3" failures="0" errors="0" time="0.932">
+  <testsuite name="Test End-to-End (E2E) - Parcours Utilisateur" errors="0" failures="0" skipped="0" timestamp="2026-06-25T10:09:01" time="0.656" tests="1">
+    <testcase classname="Test End-to-End (E2E) - Parcours Utilisateur devrait exécuter le parcours complet : charger l&apos;UI puis consommer l&apos;API de bienvenue personnalisée" name="Test End-to-End (E2E) - Parcours Utilisateur devrait exécuter le parcours complet : charger l&apos;UI puis consommer l&apos;API de bienvenue personnalisée" time="0.04">
+    </testcase>
+  </testsuite>
+  <testsuite name="Test Unitaire - Configuration" errors="0" failures="0" skipped="0" timestamp="2026-06-25T10:09:01" time="0.06" tests="1">
+    <testcase classname="Test Unitaire - Configuration devrait retourner le bon préfixe selon l&apos;environnement" name="Test Unitaire - Configuration devrait retourner le bon préfixe selon l&apos;environnement" time="0.001">
+    </testcase>
+  </testsuite>
+  <testsuite name="Tests d&apos;Intégration - Endpoints d&apos;API" errors="0" failures="0" skipped="0" timestamp="2026-06-25T10:09:01" time="0.156" tests="1">
+    <testcase classname="Tests d&apos;Intégration - Endpoints d&apos;API GET /api/health devrait retourner un code 200 et un statut valide" name="Tests d&apos;Intégration - Endpoints d&apos;API GET /api/health devrait retourner un code 200 et un statut valide" time="0.006">
+    </testcase>
+  </testsuite>
+</testsuites>

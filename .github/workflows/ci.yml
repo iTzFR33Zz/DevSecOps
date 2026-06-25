@@ -40,6 +40,8 @@ jobs:
         if: always()
         with:
           report_paths: 'reports/junit.xml'
+          detailed_summary: true
+          include_passed: true
 
       - name: Test Secrets and Variables
         env:

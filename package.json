@@ -9,7 +9,11 @@
   },
   "jest-junit": {
     "outputDirectory": "reports",
-    "outputName": "junit.xml"
+    "outputName": "junit.xml",
+    "includeConsoleOutput": "true",
+    "ancestorSeparator": " › ",
+    "classNameTemplate": "{classname}",
+    "titleTemplate": "{title}"
   },
   "dependencies": {
     "express": "^4.19.2"
