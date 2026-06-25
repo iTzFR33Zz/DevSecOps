@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # Scanner l'écosystème npm (package.json)
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "security"
+      - "dependencies"
+
+  # Scanner également les actions GitHub utilisées dans nos workflows (ci.yml)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "actions"
+      - "dependencies"
