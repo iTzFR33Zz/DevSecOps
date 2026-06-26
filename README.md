@@ -64,6 +64,43 @@ Commit rejected. Please fix the errors and try again.
 
 Ce mécanisme de garde-fou bloque localement le commit et empêche l'envoi de configurations erronées sur le dépôt.
 
+**Exemple d'interception d'une fuite de secret par Gitleaks :**
+
+```console
+matthieu@VM-Docker:~/GithubAction$ git commit -m "feat: DevSecOps pipeline with SOPS and Gitleaks"
+Running Gitleaks...
+
+    ○
+    │╲
+    │ ○
+    ○ ░
+    ░    gitleaks
+
+Finding:     AGE-SECRET-KEY-1LDW8WV3MMMGHFMFCAXUSU3VJJ53EEX8LM2JN58X95ZTEEQY5QQZSD6AMAY
+Secret:      AGE-SECRET-KEY-1LDW8WV3MMMGHFMFCAXUSU3VJJ53EEX8LM2JN58X95ZTEEQY5QQZSD6AMAY
+RuleID:      age secret key
+Entropy:     4.675009
+File:        dev.txt
+Line:        3
+Fingerprint: dev.txt:age secret key:3
+
+Finding:     # public key: age1dhn96l4gdexhuw5r9g5flwug9c7q4h5zk5mkrpn2hlursjj0tsfsuh7hn4
+AGE-SECRET-KEY-1LDW...
+Secret:      age1dhn96l4gdexhuw5r9g5flwug9c7q4h5zk5mkrpn2hlursjj0tsfsuh7hn4
+RuleID:      generic-api-key
+Entropy:     4.630985
+File:        dev.txt
+Line:        2
+Fingerprint: dev.txt:generic-api-key:2
+
+8:02AM INF 1 commits scanned.
+8:02AM INF scan completed in 6.32ms
+8:02AM WRN leaks found: 2
+Gitleaks found secrets! Commit aborted.
+```
+
+Le commit contenant une clé secrète est immédiatement avorté, empêchant le secret de pénétrer l'historique Git.
+
 ## Architecture DevSecOps (Pipeline GitHub Actions)
 
 Le projet intègre une usine logicielle complète et hautement sécurisée, automatisant l'intégralité du cycle de vie du code jusqu'au déploiement. Le pipeline s'exécute à chaque `push`, de manière planifiée (`cron`), ou manuellement (`workflow_dispatch`).
