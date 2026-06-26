@@ -135,7 +135,7 @@ jobs:
           mkdir -p ~/.config/sops/age
           echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
           # Decrypt secrets
-          sops -d secrets-prod.yaml > secrets-prod-decrypted.json --output-type json
+          sops -d --output-type json secrets-prod.yaml > secrets-prod-decrypted.json
           
           # Mask the decrypted values in logs
           AWS_KEY=$(jq -r '.SIMULATED_AWS_KEY' secrets-prod-decrypted.json)
