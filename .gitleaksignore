@@ -1,0 +1,2 @@
+# Ignore the mock high entropy hash
+e646b167d3d3303646398b44c4ad4e21833d7cfd:src/app.test.js:generic-api-key:1

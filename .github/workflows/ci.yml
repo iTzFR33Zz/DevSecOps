@@ -104,10 +104,61 @@ jobs:
     needs: docker-build-and-scan
     environment: production
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup age
+        run: |
+          curl -LO https://github.com/FiloSottile/age/releases/download/v1.1.1/age-v1.1.1-linux-amd64.tar.gz
+          tar xzf age-v1.1.1-linux-amd64.tar.gz
+          sudo mv age/age age/age-keygen /usr/local/bin/
+
+      - name: Setup SOPS
+        run: |
+          curl -LO https://github.com/getsops/sops/releases/download/v3.8.1/sops-v3.8.1.linux.amd64
+          sudo mv sops-v3.8.1.linux.amd64 /usr/local/bin/sops
+          sudo chmod +x /usr/local/bin/sops
+
+      - name: Decrypt secrets
+        env:
+          SOPS_AGE_KEY: ${{ secrets.SOPS_AGE_KEY }}
+        run: |
+          # Use age key from secret
+          mkdir -p ~/.config/sops/age
+          echo "$SOPS_AGE_KEY" > ~/.config/sops/age/keys.txt
+          # Decrypt secrets
+          sops -d secrets-prod.yaml > secrets-prod-decrypted.json --output-type json
+          
+          # Mask the decrypted values in logs
+          AWS_KEY=$(jq -r '.SIMULATED_AWS_KEY' secrets-prod-decrypted.json)
+          INTERNAL=$(jq -r '.INTERNAL_TOKEN' secrets-prod-decrypted.json)
+          echo "::add-mask::$AWS_KEY"
+          echo "::add-mask::$INTERNAL"
+          
+          # Output to GITHUB_ENV
+          echo "SIMULATED_AWS_KEY=$AWS_KEY" >> $GITHUB_ENV
+          echo "INTERNAL_TOKEN=$INTERNAL" >> $GITHUB_ENV
+          
+          # Clean up decrypted file
+          rm secrets-prod-decrypted.json
+
       - name: Test Secrets and Variables
         env:
           APP_ENV: ${{ vars.APP_ENVIRONMENT }}
-          AWS_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          AWS_KEY: ${{ env.SIMULATED_AWS_KEY }}
+          INTERNAL: ${{ env.INTERNAL_TOKEN }}
         run: |
           echo "Environment: $APP_ENV"
           echo "AWS Key: $AWS_KEY"
+          echo "Internal Token: $INTERNAL"
+          node src/app.js &
+          sleep 2
+          curl -s http://localhost:3000/api/health || true
